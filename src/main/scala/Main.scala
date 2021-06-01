@@ -2,23 +2,25 @@ import cilib._
 import cilib.pso._
 import cilib.pso.Defaults._
 import cilib.exec._
+import cilib.io._
 
 import eu.timepit.refined.auto._
 
-import scalaz._
-import scalaz.effect._
-import scalaz.effect.IO.putStrLn
 import spire.implicits._
 import spire.math.Interval
 
+import zio.prelude.{ Comparison => _, _ }
+import zio.stream._
 
-object Main extends SafeApp {
+
+object Main extends zio.App {
 
  val bounds = Interval(-5.12, 5.12) ^ 30
   val env =
     Environment(
       cmp = Comparison.dominance(Min),
-      eval = Eval.unconstrained(cilib.benchmarks.Benchmarks.spherical[NonEmptyList, Double]).eval)
+      eval = Eval.unconstrained((x: NonEmptyList[Double]) => Feasible(x.map(z => z*z).sum))
+    )
 
   // Define a normal GBest PSO and run it for a single iteration
   val cognitive = Guide.pbest[Mem[Double], Double]
@@ -28,19 +30,58 @@ object Main extends SafeApp {
   // RVar
   val swarm =
     Position.createCollection(PSO.createParticle(x => Entity(Mem(x, x.zeroed), x)))(bounds, 20)
-  val iter = Iteration.sync(gbestPSO)
 
-  val problemStream = Runner.staticProblem("spherical", env.eval, RNG.init(123L)).take(1000)
+  val iter = Kleisli(Iteration.sync(gbestPSO))
 
-  // Our IO[Unit] that runs the algorithm, at the end of the world
-  override val runc: IO[Unit] = {
-    val t = Runner.foldStep(env,
-                            RNG.fromTime,
-                            swarm,
-                            Algorithm("gbestPSO", iter),
-                            problemStream,
-                            (x: NonEmptyList[Particle[Mem[Double], Double]]) => RVar.point(x))
+  val problemStream = Runner.staticProblem("spherical", env.eval)
 
-    putStrLn(t.runLast.unsafePerformSync.toString)
+
+  type Swarm = NonEmptyList[Particle[Mem[Double], Double]]
+
+  // A data structure to hold the resulting values.
+  // Each class member is mapped to a column within the output file
+  final case class Results(min: Double, average: Double)
+
+  def extractSolution(collection: Swarm) = {
+    val fitnessValues = collection.map(x =>
+      x.pos.objective
+        .flatMap(_.fitness match {
+          case Left(f) =>
+            f match {
+              case Feasible(v) => Some(v)
+              case _           => None
+            }
+          case _ => None
+        })
+        .getOrElse(Double.PositiveInfinity)
+    )
+
+    Results(fitnessValues.min, fitnessValues.reduceLeft(_ + _) / fitnessValues.size)
   }
+
+  val combinations =
+    RNG.initN(50, 123456789L)
+      .map(r =>
+        Runner.foldStep(env,
+          r,
+          swarm,
+          Runner.staticAlgorithm("GBestPSO", iter),
+          problemStream,
+          (x: Swarm, _) => RVar.pure(x)
+        )
+          .map(Runner.measure(extractSolution _))
+          .take(1000) // 1000 iterations
+      )
+
+  val threads = 4
+  val outputFile = new java.io.File("gbest-pso.parquet")
+
+  def run(args: List[String]) = {
+    println("preparing to run")
+
+    ZStream.mergeAll(threads)(combinations: _*)
+      .run(parquetSink(outputFile))
+      .exitCode
+  }
+
 }

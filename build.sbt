@@ -1,9 +1,16 @@
-scalaVersion := "2.12.8"
-
-libraryDependencies ++= Seq(
-  "net.cilib" %% "cilib-core" % "2.0.1",
-  "net.cilib" %% "cilib-exec" % "2.0.1",
-  "net.cilib" %% "cilib-de" % "2.0.1",
-  "net.cilib" %% "cilib-pso" % "2.0.1",
-  "net.cilib" %% "benchmarks" % "0.1.1"
+inThisBuild(
+  List(
+    scalaVersion := "2.12.14"
+  )
 )
+
+val revisionSHA = "50f927a816b7a3ad6f054ccb5a73e339f92bb01a"
+
+lazy val cilibCore = ProjectRef(uri("git://github.com/ciren/cilib.git#%s".format(revisionSHA)), "core")
+lazy val cilibPSO = ProjectRef(uri("git://github.com/ciren/cilib.git#%s".format(revisionSHA)), "pso")
+lazy val cilibExec = ProjectRef(uri("git://github.com/ciren/cilib.git#%s".format(revisionSHA)), "exec")
+lazy val cilibIO = ProjectRef(uri("git://github.com/ciren/cilib.git#%s".format(revisionSHA)), "io")
+
+
+lazy val root = (project in file("."))
+  .dependsOn(cilibCore, cilibPSO, cilibExec, cilibIO)
