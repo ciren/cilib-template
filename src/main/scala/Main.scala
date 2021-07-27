@@ -4,6 +4,8 @@ import cilib.pso.Defaults._
 import cilib.exec._
 import cilib.io._
 
+import benchmarks._
+
 import eu.timepit.refined.auto._
 
 import spire.implicits._
@@ -19,7 +21,7 @@ object Main extends zio.App {
   val env =
     Environment(
       cmp = Comparison.dominance(Min),
-      eval = Eval.unconstrained((x: NonEmptyList[Double]) => Feasible(x.map(z => z*z).sum))
+      eval = Eval.unconstrained((x: NonEmptyList[Double]) => Feasible(Benchmarks.spherical(x)))
     )
 
   // Define a normal GBest PSO and run it for a single iteration
