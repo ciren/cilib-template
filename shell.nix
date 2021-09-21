@@ -1,11 +1,4 @@
-{ pkgs }:
-
-pkgs.mkShell {
-  src = if pkgs.lib.inNixShell then null else pkgs.nix;
-  buildInputs = with pkgs; [
-    #openjdk11
-    jdk8
-    sbt
-    #metals
-  ];
-}
+let
+  flake-compat = import (builtins.fetchGit "https://github.com/edolstra/flake-compat");
+in
+(flake-compat { src = ./.; }).shellNix

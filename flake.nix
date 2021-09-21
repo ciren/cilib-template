@@ -13,7 +13,12 @@
 
         defaultPackage = packages.cilib;
 
-        devShell = import ./shell.nix { pkgs = pkgs; };
+        devShell = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            openjdk11
+            sbt
+          ];
+        };
       }
     );
 }
