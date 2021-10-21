@@ -5,8 +5,8 @@ inThisBuild(
   )
 )
 
-val revisionSHA = "50f927a816b7a3ad6f054ccb5a73e339f92bb01a"
-val benchmarksSHA = "master"
+val revisionSHA = "c9119628710b190ea56974bdc284ef0820d9934f"
+val benchmarksSHA = "b961ceb0ca917a5e9f466e5075c8a11fb716bd73"
 
 lazy val cilibCore = ProjectRef(uri("git://github.com/ciren/cilib.git#%s".format(revisionSHA)), "core")
 lazy val cilibPSO = ProjectRef(uri("git://github.com/ciren/cilib.git#%s".format(revisionSHA)), "pso")
