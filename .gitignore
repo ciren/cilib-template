@@ -1,1 +1,6 @@
 target
+.bloop
+/.metals
+/.bsp
+/.direnv
+/project
