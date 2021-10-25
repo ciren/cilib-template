@@ -4,6 +4,8 @@ import cilib.pso.Defaults._
 import cilib.exec._
 import cilib.io._
 
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.auto._
 
 import spire.implicits._
@@ -14,7 +16,7 @@ import zio.stream._
 
 
 object Main extends zio.App {
-  val swarmSize = 20
+  val swarmSize: Int Refined Positive = 20
   val problemDimensions = 10
   val bounds = Interval(-5.12, 5.12) ^ problemDimensions
   val cmp = Comparison.dominance(Min)
