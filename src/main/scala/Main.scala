@@ -14,6 +14,8 @@ import spire.math.Interval
 import zio.prelude.{ Comparison => _, _ }
 import zio.stream._
 
+import _root_.benchmarks._
+
 
 object Main extends zio.App {
   val swarmSize: Int Refined Positive = 20
@@ -21,12 +23,11 @@ object Main extends zio.App {
   val bounds = Interval(-5.12, 5.12) ^ problemDimensions
   val cmp = Comparison.dominance(Min)
 
-
   /* Convert the NonEmtpyVector into a AtLeast2List structure which
-   * guaraantees that there are 2 or more elements
+   * guaraantees that there are 2 or more elements; fail otherwise
    */
   def mkAtLeast2List(x: NonEmptyVector[Double]) =
-    benchmarks.AtLeast2List.make(x) match {
+    AtLeast2List.make(x) match {
       case ZValidation.Failure(_, e) => sys.error("Input vector requires at least 2 elements")
       case ZValidation.Success(_, result) => result
     }
