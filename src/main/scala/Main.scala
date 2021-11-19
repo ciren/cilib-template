@@ -4,12 +4,7 @@ import cilib.pso.Defaults._
 import cilib.exec._
 import cilib.io._
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.Positive
-import eu.timepit.refined.auto._
-
-import spire.implicits._
-import spire.math.Interval
+import zio.prelude.newtypes.Natural
 
 import zio.prelude.{ Comparison => _, _ }
 import zio.stream._
@@ -17,10 +12,10 @@ import zio.stream._
 import _root_.benchmarks._
 
 
-object Main extends zio.App {
-  val swarmSize: Int Refined Positive = 20
+object CEC2005 extends zio.App {
+  val swarmSize: Natural = Natural.make(20).toOption.get
   val problemDimensions = 10
-  val bounds = Interval(-5.12, 5.12) ^ problemDimensions
+  val bounds = Interval(-100.0, 100.0) ^ problemDimensions
   val cmp = Comparison.dominance(Min)
 
   /* Convert the NonEmtpyVector into a AtLeast2List structure which
@@ -50,9 +45,7 @@ object Main extends zio.App {
       val nev2 = mkAtLeast2List(x)
       Feasible(benchmarks.cec.cec2005.Benchmarks.f3(nev2))
     }))
-  //  val problemStream = Runner.staticProblem("f20", eval)
-  //  val problemStream = Runner.staticProblem("iris3D", eval)
-  //  val problemStream = Runner.staticProblem("ackley", eval)
+
 
   type Swarm = NonEmptyVector[Particle[Mem[Double], Double]]
 
